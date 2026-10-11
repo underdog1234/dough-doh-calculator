@@ -66,7 +66,7 @@ test('An impossibly soon bake time is marked infeasible with a best-effort sched
   assert.ok(plan.steps.length > 0);
 });
 
-test('A bake time in the past is rejected outright', () => {
+test('A bake time in the past is rejected outright, with no steps to render', () => {
   const plan = planTimeline({
     mode: 'yeast',
     starterPercent: 0,
@@ -76,7 +76,25 @@ test('A bake time in the past is rejected outright', () => {
     now: NOW,
   });
   assert.equal(plan.feasible, false);
-  assert.equal(plan.steps, undefined);
+  assert.match(plan.message, /already passed/);
+  assert.deepEqual(plan.steps, []);
+});
+
+test('Picking just today\'s date (time left at midnight) does not crash the planner', () => {
+  // This is how a datetime-local picker often behaves when only the date is
+  // touched: the time stays at 00:00, which for "today" is already in the past.
+  const midnightToday = new Date(NOW);
+  midnightToday.setHours(0, 0, 0, 0);
+  const plan = planTimeline({
+    mode: 'sourdough',
+    starterPercent: 20,
+    starterHydration: 100,
+    yeastPercent: 0,
+    bakeAt: midnightToday,
+    now: NOW,
+  });
+  assert.equal(plan.feasible, false);
+  assert.deepEqual(plan.steps, []);
 });
 
 test('More starter/yeast means a shorter estimated ferment', () => {

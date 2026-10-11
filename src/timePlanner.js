@@ -94,7 +94,11 @@ export function planTimeline({ mode, starterPercent, yeastPercent, bakeAt, now =
     return {
       feasible: false,
       hoursAvailable,
-      message: 'Pick a bake time at least an hour from now.',
+      message:
+        hoursAvailable < 0
+          ? "That bake time has already passed. Pick one in the future."
+          : 'Pick a bake time at least an hour from now.',
+      steps: [],
     };
   }
 

@@ -81,17 +81,19 @@ export default function TimePlanner({ plan, onPlanChange, mode, starterPercent, 
               </div>
             )}
 
-            <div>
-              <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-muted">Schedule</h3>
-              <ol className="space-y-2">
-                {timeline.steps.map((step, index) => (
-                  <li key={index} className="flex items-baseline justify-between gap-3 border-b border-card-alt py-1.5 last:border-0">
-                    <span className="text-cream">{step.label}</span>
-                    <span className="shrink-0 text-sm font-bold text-accent-soft">{timeFormat.format(step.time)}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            {timeline.steps?.length > 0 && (
+              <div>
+                <h3 className="mb-1 text-sm font-bold uppercase tracking-wide text-muted">Schedule</h3>
+                <ol className="space-y-2">
+                  {timeline.steps.map((step, index) => (
+                    <li key={index} className="flex items-baseline justify-between gap-3 border-b border-card-alt py-1.5 last:border-0">
+                      <span className="text-cream">{step.label}</span>
+                      <span className="shrink-0 text-sm font-bold text-accent-soft">{timeFormat.format(step.time)}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
           </div>
         )}
       </ToggleCard>
