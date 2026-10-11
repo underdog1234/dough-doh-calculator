@@ -30,6 +30,10 @@ Hydration rises with wholemeal: 65% base, plus 1% for every 10% wholemeal. You c
 
 Optional, in `src/timePlanner.js`. Pick a bake time — later today or days out — and it builds a schedule backwards from now: mix, add starter/yeast, stretch-and-folds, divide and shape, proof (or an overnight fridge retard if there's time to spare), bake. If the window is too tight for the current starter/yeast amount, it suggests a bigger one and offers to apply it to the recipe.
 
+**Step reminders.** Turn on "Notify me for each step" and the app shows an "Up next" panel for the current step with **Mark done** and **Snooze 10 min**, and fires a browser notification when permission is granted (`src/notifications.js`, routed through the service worker when available since that's more reliable on mobile). Marking a step done early or late carries that drift forward onto every later step (`src/scheduleProgress.js`), so the rest of the day's times stay honest instead of silently drifting from reality.
+
+Be realistic about what this can and can't do: there's no server behind this static site, so reminders only fire while the app is open *somewhere* (foreground or background tab, or the installed PWA) and the device hasn't put the browser to sleep. It cannot wake a fully closed app or a locked phone hours later — for a long overnight gap, the in-app panel (which has no such limit, it just reflects state) is the reliable part; the OS notification is a bonus on top when the browser allows it.
+
 ### Installable and offline
 
 Built with `vite-plugin-pwa`. The service worker precaches the whole app, so once it's loaded it keeps working with no connection, and it can be installed to a home screen. Icons are generated (no image library needed) by `scripts/generate-icons.cjs`, run once and committed under `public/icons/`.
@@ -47,6 +51,9 @@ src/
   calculator.test.js
   timePlanner.js         bake-time scheduling
   timePlanner.test.js
+  scheduleProgress.js     step completion + drift recalculation
+  scheduleProgress.test.js
+  notifications.js        browser notification wrapper
   storage.js              localStorage persistence
   defaults.js
   components/            inputs, cards, recipe output, warnings, method notes, time planner

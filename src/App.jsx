@@ -15,7 +15,18 @@ import WarningBox from './components/WarningBox.jsx';
 
 const RECIPE_STORAGE_KEY = 'dough-doh:recipe';
 const PLAN_STORAGE_KEY = 'dough-doh:plan';
-const PLAN_DEFAULTS = { enabled: false, bakeAt: '' };
+const PLAN_DEFAULTS = {
+  enabled: false,
+  bakeAt: '',
+  notifyEnabled: false,
+  // Progress through the schedule, and the fingerprint it was computed
+  // against — see src/scheduleProgress.js.
+  planKey: '',
+  lastCompletedIndex: -1,
+  driftMs: 0,
+  snoozeStepIndex: null,
+  snoozeUntil: '',
+};
 
 const FLOUR_OPTIONS = [
   { value: 'bread', label: 'High-strength / bread flour' },
