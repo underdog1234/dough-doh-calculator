@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { calculateRecipe, formatRecipeText, round1, suggestedHydration } from './calculator.js';
 import { DEFAULTS, MODE_DEFAULTS } from './defaults.js';
+import { loadJSON, saveJSON } from './storage.js';
 import Card from './components/Card.jsx';
 import CopyButton from './components/CopyButton.jsx';
 import MethodNotes from './components/MethodNotes.jsx';
@@ -8,8 +9,13 @@ import NumberField from './components/NumberField.jsx';
 import PortionSummary from './components/PortionSummary.jsx';
 import RecipeOutput from './components/RecipeOutput.jsx';
 import SelectField from './components/SelectField.jsx';
+import TimePlanner from './components/TimePlanner.jsx';
 import ToggleCard from './components/ToggleCard.jsx';
 import WarningBox from './components/WarningBox.jsx';
+
+const RECIPE_STORAGE_KEY = 'dough-doh:recipe';
+const PLAN_STORAGE_KEY = 'dough-doh:plan';
+const PLAN_DEFAULTS = { enabled: false, bakeAt: '' };
 
 const FLOUR_OPTIONS = [
   { value: 'bread', label: 'High-strength / bread flour' },
@@ -23,7 +29,14 @@ const MODE_OPTIONS = [
 ];
 
 export default function App() {
-  const [form, setForm] = useState(DEFAULTS);
+  // Recipe inputs and the bake-time plan each persist to localStorage, so the
+  // current recipe survives a reload, a sleeping phone, or relaunching the
+  // installed app — not just staying in memory.
+  const [form, setForm] = useState(() => loadJSON(RECIPE_STORAGE_KEY, DEFAULTS));
+  const [plan, setPlan] = useState(() => loadJSON(PLAN_STORAGE_KEY, PLAN_DEFAULTS));
+
+  useEffect(() => saveJSON(RECIPE_STORAGE_KEY, form), [form]);
+  useEffect(() => saveJSON(PLAN_STORAGE_KEY, plan), [plan]);
 
   const result = useMemo(() => calculateRecipe(form), [form]);
   const recipeText = useMemo(() => formatRecipeText(result), [result]);
@@ -34,6 +47,9 @@ export default function App() {
   const changeMode = (mode) => {
     setForm((f) => ({ ...f, mode, ...MODE_DEFAULTS[mode], sugarOn: false }));
   };
+
+  const applyTimingSuggestion = ({ starterPercent, yeastPercent }) =>
+    setForm((f) => ({ ...f, starterPercent, yeastPercent }));
 
   const hasStarter = form.mode !== 'yeast';
   const hasYeast = form.mode !== 'sourdough';
@@ -273,6 +289,15 @@ export default function App() {
               onChange={(on) => changeMode(on ? 'hybrid' : 'sourdough')}
             />
           </Card>
+
+          <TimePlanner
+            plan={plan}
+            onPlanChange={setPlan}
+            mode={form.mode}
+            starterPercent={form.starterPercent}
+            yeastPercent={form.yeastPercent}
+            onApplySuggestion={applyTimingSuggestion}
+          />
 
           <button
             type="button"

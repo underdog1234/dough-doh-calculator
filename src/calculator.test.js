@@ -97,3 +97,19 @@ test('Recipe text is in grams and has no yeast in sourdough mode', () => {
   assert.doesNotMatch(text, /yeast/i);
   assert.doesNotMatch(text, /cup|ounce|tablespoon|teaspoon/i);
 });
+
+test('Ingredients are ordered the way you weigh them out: starter, water, yeast, sugar, flours, salt last', () => {
+  const r = calculateRecipe({
+    ...DEFAULTS,
+    ...MODE_DEFAULTS.hybrid,
+    mode: 'hybrid',
+    sugarOn: true,
+    flourType: 'standard',
+    glutenOn: true,
+    wholemealPercent: 30,
+  });
+  assert.deepEqual(
+    r.ingredients.map((i) => i.key),
+    ['starter', 'water', 'yeast', 'sugar', 'white', 'wholemeal', 'gluten', 'salt'],
+  );
+});

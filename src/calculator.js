@@ -108,20 +108,22 @@ export function calculateRecipe(input) {
   const holdBackWater = round(addedWater * HOLD_BACK_SHARE);
   const addFirstWater = round(addedWater) - holdBackWater;
 
+  // Ordered the way you weigh it out: starter, water, yeast, sugar, then the flours,
+  // with salt last since it's fine and easy to lose track of.
   const ingredients = [
-    whiteFlour > 0 && { key: 'white', label: 'White flour', grams: round(whiteFlour) },
-    wholemealFlour > 0 && { key: 'wholemeal', label: 'Wholemeal flour', grams: round(wholemealFlour) },
-    { key: 'water', label: 'Water', grams: round(addedWater) },
     starterWeight > 0 && {
       key: 'starter',
       label: 'Ripe sourdough starter',
       grams: round(starterWeight),
       note: `Contains ${round(starterFlour)} g flour + ${round(starterWater)} g water (already counted in the water)`,
     },
-    { key: 'salt', label: 'Salt', grams: round(salt) },
-    sugar > 0 && { key: 'sugar', label: 'Sugar', grams: round(sugar) },
+    { key: 'water', label: 'Water', grams: round(addedWater) },
     yeast > 0 && { key: 'yeast', label: 'Instant yeast', grams: round(yeast) },
+    sugar > 0 && { key: 'sugar', label: 'Sugar', grams: round(sugar) },
+    whiteFlour > 0 && { key: 'white', label: 'White flour', grams: round(whiteFlour) },
+    wholemealFlour > 0 && { key: 'wholemeal', label: 'Wholemeal flour', grams: round(wholemealFlour) },
     gluten > 0 && { key: 'gluten', label: 'Vital wheat gluten', grams: round(gluten) },
+    { key: 'salt', label: 'Salt', grams: round(salt) },
   ].filter(Boolean);
 
   const calculated = ingredients.reduce((sum, item) => sum + item.grams, 0);
