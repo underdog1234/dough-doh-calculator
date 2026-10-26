@@ -66,7 +66,7 @@ export function calculateRecipe(input) {
   // Mode decides which fermentation ingredients exist.
   const starterPercentUsed = mode === 'yeast' ? 0 : starterPercent;
   const yeastPercentUsed = mode === 'sourdough' ? 0 : yeastPercent;
-  const sugarPercentUsed = mode === 'sourdough' ? (sugarOn ? sugarPercent : 0) : sugarPercent;
+  const sugarPercentUsed = sugarOn ? sugarPercent : 0;
   const usesGluten = flourType === 'standard' && glutenOn;
 
   const hydration = targetHydration / 100;

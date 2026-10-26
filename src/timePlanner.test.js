@@ -38,6 +38,52 @@ test('A bake time days away suggests an overnight cold retard', () => {
   assert.ok(plan.steps.some((s) => s.label.includes('fridge')));
 });
 
+test('A same-day bake never gets a fridge step, however much slack there is', () => {
+  // 09:00 to 23:00 same calendar day: plenty of slack, but still today.
+  const plan = planTimeline({
+    mode: 'sourdough',
+    starterPercent: 20,
+    starterHydration: 100,
+    yeastPercent: 0,
+    bakeAt: hoursLater(14),
+    now: NOW,
+  });
+  assert.equal(plan.feasible, true);
+  assert.equal(plan.planType, 'stretched');
+  assert.ok(plan.suggestion.starterPercent < 20, 'suggests less starter to slow the ferment down');
+  assert.ok(!plan.steps.some((s) => s.label.toLowerCase().includes('fridge')));
+  assert.deepEqual(
+    plan.steps.map((s) => s.label),
+    [
+      'Mix flour and most of the water. Rest (autolyse).',
+      'Add ripe starter and salt. Mix until combined.',
+      'Stretch and fold #1',
+      'Stretch and fold #2',
+      'Stretch and fold #3',
+      'Stretch and fold #4',
+      'Bulk ferment done — divide and shape.',
+      'Final proof.',
+      'Bake!',
+    ],
+  );
+});
+
+test('A huge same-day gap has no fridge step either, just an honest note', () => {
+  const earlyMorning = new Date('2026-10-12T01:00:00');
+  const plan = planTimeline({
+    mode: 'sourdough',
+    starterPercent: 20,
+    starterHydration: 100,
+    yeastPercent: 0,
+    bakeAt: new Date('2026-10-12T20:00:00'), // same day, ~19h away
+    now: earlyMorning,
+  });
+  assert.equal(plan.planType, 'stretched');
+  assert.equal(plan.suggestion, null);
+  assert.match(plan.message, /same-day gap/);
+  assert.ok(!plan.steps.some((s) => s.label.toLowerCase().includes('fridge')));
+});
+
 test('Too little time suggests a bigger starter to speed things up', () => {
   const plan = planTimeline({
     mode: 'sourdough',

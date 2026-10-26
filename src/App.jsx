@@ -56,7 +56,7 @@ export default function App() {
   const set = (key) => (value) => setForm((f) => ({ ...f, [key]: value }));
 
   const changeMode = (mode) => {
-    setForm((f) => ({ ...f, mode, ...MODE_DEFAULTS[mode], sugarOn: false }));
+    setForm((f) => ({ ...f, mode, ...MODE_DEFAULTS[mode] }));
   };
 
   const applyTimingSuggestion = ({ starterPercent, yeastPercent }) =>
@@ -251,47 +251,32 @@ export default function App() {
           </Card>
 
           <Card title="Optional hacks">
-            {form.mode === 'sourdough' ? (
-              <ToggleCard
-                title="Sugar boost"
-                description="Off in sourdough by default. A little sweetness helps browning."
-                checked={form.sugarOn}
-                onChange={(on) =>
-                  setForm((f) => ({
-                    ...f,
-                    sugarOn: on,
-                    sugarPercent: on && f.sugarPercent === 0 ? 1 : f.sugarPercent,
-                  }))
-                }
-              >
-                <NumberField
-                  label="Sugar"
-                  value={form.sugarPercent}
-                  onChange={set('sugarPercent')}
-                  min={0}
-                  max={5}
-                  step={0.5}
-                  unit="%"
-                />
-              </ToggleCard>
-            ) : (
-              <ToggleCard
-                title="Sugar boost"
-                description="Included in this mode. Adjust the amount if you like."
-                locked
-                lockedText="In this mode"
-              >
-                <NumberField
-                  label="Sugar"
-                  value={form.sugarPercent}
-                  onChange={set('sugarPercent')}
-                  min={0}
-                  max={5}
-                  step={0.5}
-                  unit="%"
-                />
-              </ToggleCard>
-            )}
+            <ToggleCard
+              title="Sugar boost"
+              description={
+                form.mode === 'sourdough'
+                  ? 'Off in sourdough by default. A little sweetness helps browning.'
+                  : "On by default in this mode for browning — turn it off if you'd rather skip it."
+              }
+              checked={form.sugarOn}
+              onChange={(on) =>
+                setForm((f) => ({
+                  ...f,
+                  sugarOn: on,
+                  sugarPercent: on && f.sugarPercent === 0 ? 1 : f.sugarPercent,
+                }))
+              }
+            >
+              <NumberField
+                label="Sugar"
+                value={form.sugarPercent}
+                onChange={set('sugarPercent')}
+                min={0}
+                max={5}
+                step={0.5}
+                unit="%"
+              />
+            </ToggleCard>
 
             <ToggleCard
               title="Yeast boost"

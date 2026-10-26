@@ -67,7 +67,7 @@ test('Test 5: high hydration warnings', () => {
   assert.ok(r.warnings.some((w) => w.startsWith('This is very wet dough')));
 });
 
-test('Hybrid mode has starter and yeast, no sugar toggle needed', () => {
+test('Hybrid mode has starter and yeast, and sugar on by default', () => {
   const r = calculateRecipe({ ...DEFAULTS, ...MODE_DEFAULTS.hybrid, mode: 'hybrid' });
   assert.ok(find(r, 'starter'));
   assert.ok(find(r, 'yeast'));
@@ -75,9 +75,16 @@ test('Hybrid mode has starter and yeast, no sugar toggle needed', () => {
   assert.equal(r.check.ok, true);
 });
 
-test('Sourdough sugar only when the sugar boost is on', () => {
+test('Sugar only appears when the sugar boost toggle is on, in every mode', () => {
   assert.equal(find(calculateRecipe({ ...DEFAULTS, sugarOn: false, sugarPercent: 2 }), 'sugar'), undefined);
   assert.ok(find(calculateRecipe({ ...DEFAULTS, sugarOn: true, sugarPercent: 2 }), 'sugar'));
+
+  // Hybrid and yeast-only default to sugar on, but it's a real toggle: off means off.
+  const hybridOff = calculateRecipe({ ...DEFAULTS, ...MODE_DEFAULTS.hybrid, mode: 'hybrid', sugarOn: false });
+  assert.equal(find(hybridOff, 'sugar'), undefined);
+
+  const yeastOff = calculateRecipe({ ...DEFAULTS, ...MODE_DEFAULTS.yeast, mode: 'yeast', sugarOn: false });
+  assert.equal(find(yeastOff, 'sugar'), undefined);
 });
 
 test('Zero portions gives the empty warning', () => {

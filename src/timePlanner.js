@@ -83,7 +83,10 @@ function leavenStepLabel(mode) {
 /**
  * Build a schedule from now until `bakeAt`, adjusting the ferment speed (and
  * saying so) if the window is too tight, or adding an overnight cold retard
- * if there's time to spare.
+ * if the bake genuinely falls on a later calendar day. A same-day bake never
+ * gets a fridge step — however much slack there is, it's still just bulk
+ * ferment, shape, final proof, then bake; a big same-day gap instead suggests
+ * a smaller starter/yeast amount to naturally slow the ferment to fit.
  */
 export function planTimeline({ mode, starterPercent, yeastPercent, bakeAt, now = new Date() }) {
   const hoursAvailable = (bakeAt.getTime() - now.getTime()) / 3_600_000;
@@ -102,6 +105,7 @@ export function planTimeline({ mode, starterPercent, yeastPercent, bakeAt, now =
     };
   }
 
+  const sameDay = bakeAt.toDateString() === now.toDateString();
   const current = estimateFerment(mode, starterPercent, yeastPercent);
   const neededHours = current.totalHours + prepHours;
 
@@ -112,9 +116,12 @@ export function planTimeline({ mode, starterPercent, yeastPercent, bakeAt, now =
   let retardHours = 0;
   let suggestion = null;
   let infeasible = false;
-  let message = "That's a comfortable, same-day window.";
+  let message = 'A comfortable window: bulk ferment, shape, final proof, then bake.';
 
-  if (hoursAvailable < neededHours - 0.5) {
+  const tooTight = hoursAvailable < neededHours - 0.5;
+  const tooSlack = hoursAvailable > neededHours + OVERNIGHT_THRESHOLD_HOURS;
+
+  if (tooTight) {
     const desiredBulk = hoursAvailable - prepHours - m.proofHours;
 
     if (desiredBulk < m.minBulkHours) {
@@ -134,13 +141,27 @@ export function planTimeline({ mode, starterPercent, yeastPercent, bakeAt, now =
       suggestion = { starterPercent: usedStarterPercent, yeastPercent: usedYeastPercent };
       message = 'Tight timing. Use a bigger starter/yeast amount to speed the ferment up to fit.';
     }
-  } else if (hoursAvailable > neededHours + OVERNIGHT_THRESHOLD_HOURS) {
+  } else if (tooSlack && !sameDay) {
     planType = 'overnight';
     retardHours = hoursAvailable - neededHours;
     message =
       retardHours > LONG_RETARD_HOURS
         ? "That's a long, slow cold retard — expect a tangier, flatter result, but it'll bake up fine."
         : 'Plenty of time. Bulk ferment at room temperature, then shape and finish proofing slowly in the fridge overnight.';
+  } else if (tooSlack && sameDay) {
+    // Same calendar day, but with hours to spare: no fridge, no "until bake
+    // day" — just slow the ferment down to fill the day instead.
+    const desiredBulk = hoursAvailable - prepHours - m.proofHours;
+    const neededPercent = percentForBulkHours(mode, desiredBulk);
+    planType = 'stretched';
+    if (mode === 'sourdough') usedStarterPercent = Math.round(neededPercent);
+    else usedYeastPercent = roundTo(neededPercent, 0.1);
+    ferment = estimateFerment(mode, usedStarterPercent, usedYeastPercent);
+    const reachedTheCap = ferment.bulkHours < desiredBulk - 0.5;
+    suggestion = reachedTheCap ? null : { starterPercent: usedStarterPercent, yeastPercent: usedYeastPercent };
+    message = reachedTheCap
+      ? "That's a long same-day gap — even the slowest sensible bulk ferment will be ready well before your bake time. Either push the bake time out to tomorrow for a proper overnight retard, or just plan on the dough waiting (loosely covered, out of the way of direct heat) for a while before baking."
+      : 'Lots of time today. Use a smaller starter/yeast amount to naturally stretch the ferment to fit.';
   }
 
   // Build the schedule, anchored to "now" and ending at the chosen bake time.
